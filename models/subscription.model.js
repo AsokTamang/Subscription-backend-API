@@ -85,6 +85,7 @@ subscriptionSchema.pre('save',function(){   //here this function will run before
   if(this.renewalDate<new Date()){   //here we are checking if the renewal date has passed the current date then it means the subscription is already expired.
     this.status='expired';
   }
+  
 })
 
 const Subscription=mongoose.model('Subscriber',subscriptionSchema);  //here we are creating the collection named subscribers in our conneccted mongodb, as mongo db automatically converts the model name into plural and in lowercase.
