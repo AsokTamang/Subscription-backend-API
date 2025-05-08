@@ -8,15 +8,16 @@ import errorHandler from "./middleware/error.middleware.js";
 import cookieParser from "cookie-parser";
 import { arcjetMiddleware } from "./middleware/arcject.middleware.js";
 import { workflowRouter } from "./routes/workflow.router.js";
+import { testRouter } from "./routes/emailReminder.test.router.js";
 
 
 dotenv.config();
 
 const PORT = process.env.PORT;
 const app = express();
-app.get("/", (req, res) => {
-  res.send("Welcome to our rest api.");
-});
+
+
+
 
 app.use(express.json());
 app.use(errorHandler);//here we are letting our app to use the errorHandler middleware.
@@ -29,6 +30,7 @@ app.use("/api/v1/users", userRouter);// this is a user router.
 app.use("/api/v1/auth", authRouter);  //this is an authorization router.
 app.use("/api/v1/subs", subscriptionRouter);  //this is a subscription router.
 app.use("/api/v1/workflow",workflowRouter);     //this is a workflow router.
+app.use("/api/v1/test",testRouter)      //this  is for our email reminder testing router.
 
 
 app.listen(PORT, async () => {

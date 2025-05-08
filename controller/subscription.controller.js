@@ -18,18 +18,22 @@ export const createSubscriber=async(req,res,next)=>{
             user:req.user._id,   //this req.user._id comes from our auth middleware as in the authmiddleware we have passed req.user=user.
 
         })
-       const qstashResponse= workflowclient.trigger({
+      
+        const qstashResponse=await workflowclient.trigger({   //we must use await for the workflow trigger to run.
             url:`${process.env.SERVER_URL}/api/v1/workflow/subscription/reminder`,
             headers:{
               'Content-Type':'application/json'  
             },
             body:JSON.stringify({subscriptionId:subscribers._id}),    //here we are passing the id of a newly created subscriber id.
             retries:0,
+           
         })
+        console.log(qstashResponse)
+       
+        res.status(200).json({success:true,data:subscribers,qstashResponse})
         
+       //here we are checking if  the qstashResponse exist if it does then we respond with the messageId of qstash otherwise null.
         
-        res.status(200).json({success:true,data:subscribers,messageId:qstashResponse.messageId})
-        next();
 
     }catch(Err){
         next(Err);

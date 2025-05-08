@@ -3,10 +3,12 @@ const require = createRequire(import.meta.url); //    we are using createRequire
 const { serve } = require("@upstash/workflow/express");
 import Subscription from "../models/subscription.model.js";
 import dayjs from "dayjs";
+import { sendEmailReminder } from "../utils/send-email.js";
+
 
 export const sendReminders = serve(async (context) => {
   //here context is the serverless env provided by upsatsh
-  const remainingDays = [30, 20, 10, 7, 5, 3, 2, 1]; //we are setting a dummy collection of remaining days for calculation.
+  const remainingDays = [10, 7, 5, 3, 2, 1]; //we are setting a dummy collection of remaining days for calculation.
   const { subscriptionId } = await context.requestPayload; //we are extracting the subscriptionId provided through the request payload of workflow triggering method.
   const subscription = await context.run("get subscription", async () => {
     //here we are fetching the data based on the id using the subscription model and its running on the serverless env context.run which is possible by upstash.
@@ -31,7 +33,7 @@ export const sendReminders = serve(async (context) => {
         `${remainingDay} remaining days from ${renewalDate}}`,
         reminderDate
       );
-      await trigger(context, `triggering at ${reminderDate}`);
+      await trigger(context, `${remainingDay}`);
     }
   }
 });
@@ -41,9 +43,21 @@ const sleepUntil = async (context, label, date) => {
   console.log(label);
   await context.sleepUntil(label, date.toDate()); //here context.sleepUntil is a function provided by an upstash which terminates the workflow temporarily unitl this date.toDate
 };
-const trigger = async (context, label) => {
-  //this is a trigger function.
-  return await context.run(label, () => {
-    console.log(label);
-  });
-};
+
+const trigger=async(context,label)=>{
+  return await context.run(label,async()=>{
+    const {subscriptionId}=context.requestPayload;
+    const subscription=await Subscription.findById(subscriptionId).populate('user','name email')
+    if(!subscription){console.log('No subscription found,'); return}  
+    const htmlContent=`
+      <div style="font-family:Arial,sans-serif;padding:20px;">
+        <p>👋 Hello <strong>${subscription.user.name}</strong>,</p>
+        <p>This is a reminder to renew your subscription. Your renewal date is <strong>${dayjs(subscription.renewalDate).format("MMMM D, YYYY")}</strong>, which is <strong>${label}</strong> days from now.</p>
+        <p>🔁 Please renew before this date to avoid any interruptions.</p>
+        <br/>
+        <p>Thanks,<br/>Subscription tracker team</p>
+      </div>
+    `;
+    await sendEmailReminder(subscription.user.email,'Email Reminder to renew the subscription',htmlContent);
+  })
+}

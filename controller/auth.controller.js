@@ -61,9 +61,9 @@ const SignIn = async (req, res, next) => {
     if(!validPW){
       return res.status(401).json({error:'Invalid password'})
     }
-    //if all of the above conditions are false then
+    //if all of the above conditions are false then we assign the signed in user a token.
     const token=jwt.sign({userId:validUser._id},JWT_TOKEN,{expiresIn:expiry})   //we are giving the token to the signed in user.
-    return res.status(200).json({success:true,message:'successful signin.'})
+    return res.status(200).json({success:true,message:'successful signin.',token})
 
 
   }catch(Err){
